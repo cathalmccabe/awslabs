@@ -1,309 +1,313 @@
+<table style="width:100%">
+  <tr>
+    <th width="100%" colspan=6><h2>XUP SDx Labs (2018.3)</h2></th>
+  </tr>
+  <tr>
+    <td align="center"><a href="setup_sdx.md">1. Setup SDx</a></td>
+    <td align="center"><a href="sdx_introduction.md">2. Introduction to SDx</a></td>
+    <td align="center"><a href="Optimization_lab.md">4. Optimization</a></td>
+    <td align="center"><a href="rtl_kernel_wizard_lab.md">5. RTL Kernel Wizard</a></td>
+    <td align="center"><a href="debug_lab.md">6. Debugging</a></td>
+    <td align="center"><a href="sources/helloworld_ocl/command_line.ipynb">7. SDx command line</a></td>
+  </tr>
+</table>
+
 # Hardware/Software Debugging
 
 ## Introduction
 
-This lab is continuation of the previous (**<a href="rtl_kernel_wizard_lab.md">RTL-Kernel Wizard Lab</a>**) lab. You will add ChipScope cores to monitor the activities taking place at the kernel interface level and perform software debugging using SDx debug capabilities.
+This lab is a continuation of the previous (**<a href="rtl_kernel_wizard_lab.md">RTL-Kernel Wizard Lab</a>**) lab. You will use ChipScope to monitor signals at the kernel interface level and perform software debugging using SDx. Note that this lab is not currently supported on Nimbix as the Xilinx Virtual Cable (XVC is not supported)
 
 ## Objectives
 
 After completing this lab, you will be able to:
 
-- Add ChipScope cores at the kernel interface level 
-- Debug software application
-- Verify functionality in hardware on F1
+* Add ChipScope cores to an SDx design
+* Use ChipScope to monitor signals at the kernel interface
+* Debug a software application in SDx
 
 ## Steps
-#### Please refer to the Appendix-II if you either want to run the lab in the command line mode or want to run the lab on your personally created instance (i.e. non-xilinx instance)
 
-### Open an SDAccel Project
-1. Execute the following commands, if not already done, in a terminal window to source the required environment settings:
-   ```
-      cd ~/aws-fpga
-      source sdaccel_setup.sh
-      source $XILINX_SDX/settings64.sh
-   ```
-1. Execute the following commands in a terminal window to change to a working directory where the precompiled project is provided:  
-   ```
-      cd /home/centos/sources/debug_lab
-   ```
-1. Since we will be executing application in System configuration mode, we need to start the SDx program as being **su**. Execute the following commands to launch **sdx**
-   ```
-      sudo sh
-      source /opt/xilinx/xrt/setup.sh
-      /opt/Xilinx/SDx/2018.2.op2258646/bin/sdx
-   ```  
-1. An Eclipse launcher window will appear asking you to select a directory as workspace. Click on the **Browse…** button, browse to **/home/centos/sources/debug\_lab**, click **OK** twice
+### Open SDx and import the project
+
+To save time on compilation, a precompiled project will be provided with the Chipscope debug cores already included in the design. 
+
+* Open SDx
+    Make sure your target platform has already been imported. You will see an error if the platform used by the precompiled project is not available.
+* From the SDx *File* menu, select **Import**
+* In the *Import Wizard*, expand *Xilinx* and select **SDX Project** and click **Next**
+* Select **SDx project exported zip file** and click **Next**
+* Browse to the appropriate *folder* for your target and click **OK** You should see a .sdx.zip file in the folder you select. 
+      sdxlabs/sources/debug/<aws|u200>
+* Select the appropriate project archive for your target and click **Next**
+
+#### Set permissions on imported executable
+
+* Once the project has been imported, in *Project Explorer* expand **debug>System**
+* Right click on *debug.exe* and select **Properties**
+* Tick the box to add **Execute** to the *Owner* permissions
+
+![](./images/debug_lab/rtl_kernel_exe_properties.png)
+
+
+
+* If you don't see an option to set the permissions, open a terminal, browse to the directory containing the debug.exe, and run the following command to change the permissions to make the file executable:
+
+```
+chmod 777 debug.exe 
+```
 
 ### Hardware Debugging
-#### Review the Appendix-I section to understand how to add ChipScope Debug bridge core. It is already added in the precompiled design
+
+#### Review Appendix-I section to understand how to add the ChipScope Debug bridge core and build the project. The debug core has been included in the precompiled sources provided
+
 #### Run the application
-1. Make sure that lines 246 and 247 are not commented. If they are commented then uncomment them and save the file.
-1. In the **Assistant** tab, expand **System > Run** and select **Run Configuration**
-1. Make sure that the Arguments tab shows **../binary_container_1.xclbin** entry
-1. Make sure that the Environment tab shows **/opt/xilinx/xrt/lib** in the _LD\_LIBRARY\_PATH_ field
-1. Click **Run**
-The host application will start executing, loading bitstream, and pausing for the user input as coded on line 246
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-3.png"/>
-    </p>
-    <p align = "center">
-    <i>Paused execution</i>
-    </p>
-### Start Vivado Hardware Manager
-1. In another terminal window, start virtual jtag connection using following two commands. The Virtual JTAG XVC Server will start listening to TCP port 10201
+
+* Open the project.sdx and select **System** as the Active build configuration.
+
+* From the **Run** menu, select **Run Configurations**
+* Expand *OpenCL* and select *debug-Default*
+* For Alveo, in the *Arguments* tab make sure **Automatically add binary container(s) to arguments** is selected. For AWS, make sure the *.awsxclbin filename is listed as an argument
+* Click **Run**
+
+The host application will start executing, load the bitstream, and wait for user input (press any key to continue) 
+
+![](./images/debug_lab/FigDebugLab-3.png)
+
+### Set up the Xilinx Virtual Cable (XVC)
+
+The Xilinx Virtual Cable (XVC) is a virtual device that gives you JTAG debug capabilities over PCIe to the target device. XVC will be used to debug the design. 
+
+#### For Alveo U200
+
+For an Alveo board, you need to determine the XVC device in your system. XVC is installed as part of the SDx and XRT installation. 
+
+```
+      ls /dev/xvc_pub*
+```
+
+This will report something similar to the output below:
+
+```
+      /dev/xvc_pub.u513
+```
+
+Each computer may have a different value for *xvc_pub.\** so you will need to check the name for your computer. 
+
+* In a terminal window, start a virtual jtag connection 
+
+Run the following command (where _u513_ should be the value your obtained from the previous command):
+
+```
+      sdx_debug_hw --xvc_pcie /dev/xvc_pub.u513 --hw_server
+```
+
+```
+      launching xvc_pcie...
+      xvc_pcie -d /dev/xvc_pub.u513 -s TCP::10200
+      launching hw_server...
+      hw_server -sTCP::3121
+
+      ****************************
+      *** Press Ctrl-C to exit ***
+      ****************************
+```
+
+The Virtual JTAG XVC Server will start listening to TCP port **10200** in this case. This is the port you will need to connect to from Vivado (below). Note the *hw_server* is listening to TCP port 3121.
+
+Skip the next section and continue with [Connecting Vivado to the XVC](#connect_vivado_to_xvc)
+
+#### For AWS
+For AWS run the following script which will manage setup of the XVC:
+
    ```
-      source $XILINX_SDX/settings64.sh
-      sudo fpga-start-virtual-jtag -P 10201 -S 0
+      sudo fpga-start-virtual-jtag -P 10200 -S 0
    ```
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-4.png"/>
-    </p>
-    <p align = "center">
-    <i>Starting Virtual JTAG</i>
-    </p>
-1. Start Vivado from another terminal window from the debug_lab directory
-1. Click on **Open Hardware Manager** link
-1. Click **Open Target > Open New Target**
-1. Click **Next**
-1. Click **Next** keeping default _Local Server_ option
-1. Click on the **Add Xilinx Virtual Cable (XVC)** button
-1. Enter **localhost** in the _Host name_ and **10201** in the _Port_ fields, and click **OK**
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-5.png"/>
-    </p>
-    <p align = "center">
-    <i>Adding Virtual JTAG cable</i>
-    </p>
-    The Open New Hardware Target form with scanned debug_bridge will appear
-     <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-6.png"/>
-    </p>
-    <p align = "center">
-    <i>Scanned debug bridge</i>
-    </p>  
-1. Click **Next** and then **Finish**  
-The Vivado Hardware Manager will open showing _Hardware_, _Waveform_, _Settings-hw_, _Trigger-Setup_ windows. The _Hardware_ window also shows two ILA cores inserted in the design
-     <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-7.png"/>
-    </p>
-    <p align = "center">
-    <i>Hardware Manager</i>
-    </p>  
-1. In the _Hardware Device Properties_ view, click on browse button of the **Probes file**, browse to **/home/centos/sources/debug_lab/rtl_kernel_example/System** folder, select **top_sp.ltx** entry and click **OK**  
-Notice four (Slot_0 to Slot_3) probes are filled in the Waveform window
-1. Click on the _Run Trigger immediate_ button and observe the waveform window is filled indicating the four channels are in _Inactive_ state
-     <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-8.png"/>
-    </p>
-    <p align = "center">
-    <i>Forced triggered waveform window</i>
-    </p>  
-1. Expand **slot_1 : KVAdd_1_m01_axi : W Channel** in the Waveform window, select the **WVALID** signal and drag it to the Trigger Setup - hw window
-     <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-9.png"/>
-    </p>
-    <p align = "center">
-    <i>Adding a probe in the Trigger Setup window</i>
-    </p>  
-1. Click on drop-down button of the Value field and select trigger condition value as 1
-     <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-10.png"/>
-    </p>
-    <p align = "center">
-    <i>Setting trigger condition</i>
-    </p>  
-1. Click on the Run button and observe hw_ila_1 probe is waiting for the trigger condition to occur
-     <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-11.png"/>
-    </p>
-    <p align = "center">
-    <i>Waiting for the trigger condition to occur</i>
-    </p>  
-1. Switch to the SDx window and hit Enter key in the Console window for the program to continue execution  
-Observe that the program finishes execution displaying **INFO: Test completed successfully** message in the Console window
-1. Switch back to Vivado and observed that since the trigger condition is met, the waveform window is displaying activities
-     <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-12.png"/>
-    </p>
-    <p align = "center">
-    <i>Triggered waveform</i>
-    </p>  
-1. Expand **Slot_0, slot_1,** and **slot_2** groups, zoom in region of about _450 to 1000_, and observe the data transfer taking place on each channels. Also note the addresses from where data are read and results are written into  
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-13.png"/>
-    </p>
-    <p align = "center">
-    <i>Zoomed view showing various activities</i>
-    </p>  
-1. Zoom in on one of the data beats and hover your mouse at each successive samples and notice the data content changing
-1. Close Vivado by selecting **File > Exit**
-1. Close the jtag probe by switching to its terminal window and pressing _Ctrl-C_
+
+![](./images/debug_lab/FigDebugLab-4.png)
+
+<a name="connect_vivado_to_xvc"></a>
+
+### Connecting Vivado to the XVC
+
+* Start Vivado from another terminal
+
+   ```
+      vivado
+   ```
+
+* Click on **Open Hardware Manager** link
+* Click **Open Target > Autoconnect**
+
+![](./images/debug_lab/hw_manager_open_target.png)
+
+* Right click on *localhost (0)* and select **Add Xilinx Virtual Cable (XVC)** 
+
+   ![](./images/debug_lab/add_virtual_cable.png)
+
+* Enter **localhost** as the *host name*, and **10200** as the port (or the *port number* for your machine obtained previously) and click **OK**
+
+   ![](./images/debug_lab/set_virtual_cable_port.png)
+
+* Right click on the *debug_bridge* and select **Refresh Device**.
+
+The Vivado Hardware Manager should open showing _Hardware_, _Waveform_, _Settings-hw_, _Trigger-Setup_ windows. The _Hardware_ window also shows two ILA cores, *hw_ila_0* and *hw_ila_1*, inserted in the design.
+
+![](./images/debug_lab/FigDebugLab-7.png)
+
+
+* Select the *debug_bridge* in the Hardware panel
+* In the _Hardware Device Properties_ view, click on the browse button beside **Probes file**
+* Browse to the project's **./workspace/debug/System** folder, select the **.ltx** file and click **OK**  
+* Select the *hw_ila_1* tab, and notice four (Slot_0 to Slot_3) probes are filled in the Waveform window
+* Click on the **Run Trigger immediate** button ![](./images/debug_lab/run_trigger_immediate.png) and observe the waveform window is fills with data showing that the four channels were _Inactive_ for the duration of the signal capture. 
+
+   ![](./images/debug_lab/FigDebugLab-8.png)
+
+* Expand **slot_1 : KVAdd_1_m01_axi : Interface** , then find and expand  **slot_1 : KVAdd_1_m01_axi : W Channel** in the Waveform window.
+* Select the **WVALID** signal and drag it to the Trigger Setup - hw window
+
+   ![](./images/debug_lab/FigDebugLab-9.png)
+
+* Click on drop-down button of the Value field and select trigger condition value as 1
+
+   ![](./images/debug_lab/FigDebugLab-10.png)
+
+* Click on the _Run trigger_ button ![](./images/debug_lab/trigger_button.png)and observe the _hw_ila_1_ probe is waiting for the trigger condition to occur
+
+   ![](./images/debug_lab/FigDebugLab-11.png)
+
+* Switch to the SDx window select the *Console* window and press the **Enter key** to allow the program to continue executing
+Observe that the program completes displaying **INFO: Test completed successfully** in the Console window
+* Switch back to Vivado and notice that because the trigger condition was met, the waveform window has been populated with new captured data. 
+
+   ![](./images/debug_lab/FigDebugLab-12.png)
+
+* Expand **Slot_0, slot_1,** and **slot_2** groups, zoom in to the region around samples _450 to 1000_, and observe the data transfers taking place on each channels. Also note the addresses from where data are read and where the results are written to.
+
+   ![](./images/debug_lab/FigDebugLab-13.png)
+
+* Zoom in on one of the transactions and hover your mouse at each successive sample and notice the data content changing
+* When you are finished, close Vivado by selecting **File > Exit**
+* Close the jtag probe by switching to its terminal window and pressing _Ctrl-C_
 
 ### Perform Software Debugging
-1. Switch to the SDx GUI
-1. Comment out lines 246 and 247
-1. Save the file by typing **Ctrl-S**
-1. In the **Assistant** tab, right-click on **System > Debug** and select **Debug Configuration**
-1. Make sure that the **Arguments** tab shows **../binary_container_1.xclbin** entry
-1. Make sure that the Environment tab shows **/opt/xilinx/xrt/lib** in the _LD\_LIBRARY\_PATH_ field
-1. Click **Debug**  
-The host application will compile since we have modified it and a window will pop-up asking to switch to _Debug perspective_
-1. Click **Yes**  
-The program will be downloaded and execution will begin, halting at **main()** entry point
-1. In the _main.c_ view scroll down to line 280 and double-click on the left border to set a breakpoint  
-At this point, three buffers would have been created
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-14.png"/>
-    </p>
-    <p align = "center">
-    <i>Setting a breakpoint</i>
-    </p>  
-1. Click on the **Resume** button or press **F8**  
-The execution will resume and stop at the breakpoint  
-At this point you can go to various tabs and see the contents in the current scope  
-Two of the important features of SDx debugging is examining command queues and memory buffers as the program execution progresses
-1. Click on the **Step Over** button or press **F6**  
+
+* Switch to the SDx GUI
+
+* From the **Run** menu, select **Debug Configurations**
+
+* Make sure that the **Arguments** tab shows **../binary_container_1.xclbin** 
+
+* Click **Debug**  
+
+* Click **Yes** when prompted to switch to the _Debug perspective_
+The bitstream will be downloaded to the FPGA and the host application will start executing, halting at **main()** entry point
+
+* In _host_example.cpp_ view scroll down to line ~262 and double-click on the left border to set a breakpoint  At this point, three buffers would have been created
+
+  ![](./images/debug_lab/FigDebugLab-14.png)
+  
+* Click on the **Resume** button or press **F8** 
+
+* When prompted click in the console and press *Enter* 
+  The program will resume executing and stop when it reaches the breakpoint  
+  At this point you can click on the various monitoring tabs (*Variables, Command Queue, Memory Buffers* etc.) and see the contents currently in scope
+  SDx debug allows command queues and memory buffers to be examined as the program execution progresses
+
+* Click back to select *Debug.exe > #Thread 1* in the Debug panel
+
+* Click on the **Step Over** button or press **F6**
+  
 The execution will progress one statement at a time
-1. Continue pressing **F6** until you reach line number _344_ at which point kernel would have finished execution
-1. Click on the _Suspend : Step_ entry in the **Debug** tab and then select **Memory Buffers** tab  
+  
+* Continue pressing **F6** until you reach line ~326 at which point kernel will finish executing
+
+* Select the **Memory Buffers** tab 
 Notice that three buffers are allocated, their IDs, DDR memory address, and sizes
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-15.png"/>
-    </p>
-    <p align = "center">
-    <i>Memory buffers allocated</i>
-    </p>  
-1. Select the **Command Queue** tab and notice that there no commands enqued. Lines 344-348 creates commands to read the data and results
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-16.png"/>
-    </p>
-    <p align = "center">
-    <i>Setting a breakpoint</i>
-    </p>  
-1. Press **F6** to execute _clEnqueueReadBuffer_ command to create a read buffer command for reading operand _d\_A_  
+
+    ![](./images/debug_lab/FigDebugLab-15.png)
+
+* Select the **Command Queue** tab and notice that there no commands enqueued. 
+
+![](./images/debug_lab/FigDebugLab-16.png)
+
+Lines ~326-330 creates commands to read the data and results
+
+```
+   err |= clEnqueueReadBuffer( ... );
+```
+
+* Press **F6** to execute the first `clEnqueueReadBuffer()` to create a read buffer command for reading operand _d\_A_ 
 Notice the Command Queue tab shows one command submitted
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-17.png"/>
-    </p>
-    <p align = "center">
-    <i>Setting a breakpoint</i>
-    </p>  
-1. Press **F6** to execute _clEnqueueReadBuffer_ command for reading operand _d\_B_  
+
+    ![](./images/debug_lab/FigDebugLab-17.png)
+
+* Press **F6** to execute the next `clEnqueueReadBuffer()` for _d\_B_ 
 Notice the Command Queue tab shows two commands submitted
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-18.png"/>
-    </p>
-    <p align = "center">
-    <i>Setting a breakpoint</i>
-    </p>  
-1. Set a breakpoint at line _397_ and press **F8** to resume the execution  
+
+    ![](./images/debug_lab/FigDebugLab-18.png)
+
+* Set a breakpoint at line ~384 (`clReleaseKernel()`) and press **F8** to resume the execution  
 Notice that the Command Queue tab still shows entries
-1. Press **F6** to execute _clReleaseKernel_ command   
+* Press **F6** to execute `clReleaseKernel()`
 Notice the Memory Buffers tab is empty as all memories are released
-1. Click **F8** to complete the execution
-1. Close the SDx program
+* Click **F8** to complete the execution
+* Close the SDx program
 
 ## Conclusion
 
-In this lab, you used ChipScope Debug bridge and cores to perform hardware debugging. You also performed software debugging using SDx debug perspective.
+In this lab, you used the ChipScope Debug bridge and cores to perform hardware debugging. You also performed software debugging using the SDx GUI.
 
 ## Appendix-I
-### Steps to Add ChipScope Debug core      
-1. In the **Assistant** tab, expand **System > binary_container_1 > KVadd**
-1. Select **KVAdd**, right-click and select **Settings...**
-1. In the **Hardware Function Settings** window, click on the _ChipScope Debug_ option for the _KVAdd_ kernel
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-1.png"/>
-    </p>
-    <p align = "center">
-    <i>Adding ChipScope Debug module</i>
-    </p>
-1. Click **Apply** and **OK**
-1. In the **Project Explorer** tab, expand **src > sdx_rtl_kernel > KVAdd** and double-click on the **main.c** to open it in the editor window
-1. Go to line 246 and enter the following lines of code which will pause the host software execution after creating kernel but before allocating buffer
+
+### Steps to Add ChipScope Debug core and build the design
+
+* In the **Assistant** tab, expand **System > binary_container_1 > KVadd**
+* Select **KVAdd**, right-click and select **Settings...**
+* In the **Hardware Function Settings** window, click **Refresh**, and then click on the _ChipScope Debug_ option for the _KVAdd_ kernel
+
+![](./images/debug_lab/enable_chipscope.png)
+
+* Click **Apply and close**
+* In the **Project Explorer** tab, expand **src > sdx_debug > KVAdd** and double-click on the **host_example.cpp** to open it in the editor window
+* Around line 240 (after the _clCreateKernel_ section) enter the following lines of code and save the file. This will pause the host software execution after creating kernel but before allocating buffer
    ```
       printf("\nPress ENTER to continue after setting up ILA trigger...");
       getc(stdin);
    ```
-    <p align="center">
-    <img src ="./images/debug_lab/FigDebugLab-2.png"/>
-    </p>
-    <p align = "center">
-    <i>Modifying code to stop its execution before kernel is executed to start Vivado Hardware manager</i>
-    </p>
 
-## Appendix-II
-### Copy the necessary files from the _sources_ directory perform hardware debugging
-1. Execute the following commands to setup the environments
-   ```
-      cd ~/aws-fpga/
-      source sdaccel_setup.sh
-      source $XILINX_SDX/settings64.sh
-   ```
-1. Create a working directory and copy the necessary files
-   ```
-      mkdir debug_lab
-      cd debug_lab/
-      mkdir rundir
-      cp ~/sources/debug_lab/rtl_kernel_example/System/rtl_kernel_example.exe rundir/.
-      cp  ~/sources/debug_lab/rtl_kernel_example/xclbin/binary_container_1.awsxclbin rundir/.
-      cp ~/sources/debug_lab/rtl_kernel_example/System/sdaccel.ini rundir/.
-      cp ~/sources/debug_lab/rtl_kernel_example/System/top_sp.ltx .
-      cp -R ~/sources/debug_lab/rtl_kernel_example/src .
-   ```
-1. Change to the _rundir_, execute the application in debug mode using the following commands
-   ```
-      cd rundir
-      sudo sh
-      source /opt/xilinx/xrt/setup.sh
-      /opt/Xilinx/SDx/2018.2.op2258646/bin/xgdb --args rtl_kernel_example.exe binary_container_1.awsxclbin
-   ```
-1. At the GDB command line prompt, set a breakpoint at the main program entry, and run the application by executing the following commands
-   ```
-      break main
-      run
-   ```  
-The program will run up to the main() function entry point
-1. Set another breakpoint at line 280 and then continue executing the program 
-   ```
-      break 280
-      continue
-   ```  
-The program will execute and wait for you to hit the _Enter_ key. At this stage, you can follow hardware debugging as listed in the **Start Vivado Hardware Manager** section. _Note the path to the probes file is **/home/centos/aws-fpga/debug\_lab/**_ 
-   
-### Perform software debugging from the command line
-1. Perform all the steps except the setting up of the hardware manager, if already not done, listed in the previous section
-1. When line 280 breakpoint is encountered, enter the following commands to see the command queues and the memory buffers
-   ```
-      xprint queue
-      xprint mem
-   ```  
-Notice that both queue and memory buffers are empty  
-At this stage you can enter _next_ to execute one statement at a time and/or _continue_ to execute until the next breakpoint is encountered or the program executes the _exit()_ function  
-You can set breakpoints where desired  
-You can execute _list_ to show about 10 lines of source code
-1. Enter following commands to step over two steps and set a breapoint at 344
-   ```
-      next
-      next
-      break 344
-      continue
-      xprint mem
-      xprint queue
-   ```  
-Notice that three memory buffers are allocated but commands queue is empty
-1. Enter following commands to set a next breakpoint, continue to the breakpoint, execute two statements, examine command queues and memory buffers
-   ```
-      break 397
-      continue
-      next
-      next
-      xprint mem
-      xprint queue
-   ```  
-1. Execute _next_ and _xprint mem_. Notice memory buffers are empty
-1. Execute continue to execute till the end
-1. Type _quit_ to exit the GDB
+![](./images/debug_lab/FigDebugLab-2.png)
+
+* Build the design
+
+### Disable automatic rebuilding of the design
+
+When you export a project, and re-import it, the file modified dates may change and cause SDx to make the output executable and hardware kernel "out-of-date". This may cause the design to be automatically recompiled when an attempt is made to run the application from the GUI.  
+
+* To disable automatic rebuilding, right click on the project folder, and select **C/C++ Build Settings**
+
+* Select **C/C++ Build** and click on the **Behavior** tab
+
+* Uncheck the following:
+   * Build on resource save (Auto Build)
+   * Build (Incremental build)
+   * Clean
+
+When you export a project, and re-import it, these settings stop the bitstream being automatically rebuilt.
+
+![](./images/debug_lab/turn_off_autobuild.png)
+
+If you need to rebuild the project, you can re-enable these settings. If you only need to update the host application, you can run the following command in a terminal in the project folder to rebuild the .exe only (where *debug.exe* is the name of the executable): 
+
+```
+cd ./workspace/debug/System
+make debug.exe
+```
+
+### References
+
+[SDx Debug techniques](https://www.xilinx.com/html_docs/xilinx2018_3/sdaccel_doc/dtp1532068222773.html)
 
 
 

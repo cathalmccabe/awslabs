@@ -1,33 +1,30 @@
 /**********
-Copyright (c) 2017, Xilinx, Inc.
+Copyright (c) 2018, Xilinx, Inc.
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **********/
 
 #include <string.h>
@@ -64,9 +61,9 @@ idct behavior.
 
 *************************************************************************** */
 void idct(const int16_t block[64], 
-	  const uint16_t q[64], 
-	  int16_t outp[64], 
-	  bool ignore_dc) {
+      const uint16_t q[64], 
+      int16_t outp[64], 
+      bool ignore_dc) {
   #pragma HLS INLINE
 
   int32_t intermed[64];
@@ -91,7 +88,7 @@ void idct(const int16_t block[64],
   for (int y = 0; y < 8; ++y) {
     int y8 = y * 8;
     int32_t x0 = (((ignore_dc && y == 0)
-		   ? 0 : (block[y8 + 0] * q[y8 + 0]) << 11)) + 128;
+           ? 0 : (block[y8 + 0] * q[y8 + 0]) << 11)) + 128;
     int32_t x1 = (block[y8 + 4] * q[y8 + 4]) << 11;
     int32_t x2 = block[y8 + 6] * q[y8 + 6];
     int32_t x3 = block[y8 + 2] * q[y8 + 2];
@@ -223,10 +220,10 @@ channels.
 *************************************************************************** */
 template<typename out_t>
 void read_blocks(const out_t *in, hls::stream<out_t> &out, unsigned int blocks) {
-  for(unsigned int i = 0; i < blocks*2; i++) {
+    for(unsigned int i = 0; i < blocks*2; i++) {
     #pragma HLS loop_tripcount min=2048 max=2048
-    #pragma HLS PIPELINE
-    out.write(in[i]);
+    #pragma HLS PIPELINE II=1
+        out.write(in[i]);
   }
 }
 
@@ -242,27 +239,27 @@ ii=2 for the 8x8 data elements.
 
 *************************************************************************** */
 void execute(hls::stream<int512_t> &iblock, 
-	     hls::stream<uint512_t> &iq, 
-	     hls::stream<int512_t> &ivoutp, 
-	     bool ignore_dc, 
-	     unsigned int blocks) {
+         hls::stream<uint512_t> &iq, 
+         hls::stream<int512_t> &ivoutp, 
+         bool ignore_dc, 
+         unsigned int blocks) {
   for(unsigned int i = 0; i < blocks; i++) {
     /* Use II=2 here as we this will equalize all the dataflow processes and
      * save resources */
-    #pragma HLS loop_tripcount min=1024 max=1024
-    #pragma HLS PIPELINE II=2
+  #pragma HLS loop_tripcount min=1024 max=1024
+  #pragma HLS PIPELINE II=2
     
-    int16_t iiblock[64];
+    int16_t  iiblock[64];
     uint16_t iiq[64];
-    int16_t iivoutp[64];
+    int16_t  iivoutp[64];
 
     for(short j = 0; j < 64/32; j++) {
       if(i==0) {
-	ap_uint<512> tmp;
-	tmp = iq.read();
-	for(short k = 0; k < 32; k++) {
-	  iiq[j*32+k] = tmp(16*(k+1)-1, 16*k);
-	}
+    ap_uint<512> tmp;
+    tmp = iq.read();
+    for(short k = 0; k < 32; k++) {
+      iiq[j*32+k] = tmp(16*(k+1)-1, 16*k);
+    }
       }
     }
     
@@ -270,7 +267,7 @@ void execute(hls::stream<int512_t> &iblock,
       ap_int<512> tmp;
       tmp = iblock.read();
       for(short k = 0; k < 32; k++) {
-	iiblock[j*32+k] = tmp(16*(k+1)-1, 16*k);
+    iiblock[j*32+k] = tmp(16*(k+1)-1, 16*k);
       }
     }
     
@@ -279,7 +276,7 @@ void execute(hls::stream<int512_t> &iblock,
     for(short j = 0; j < 64/32; j++) {
       ap_int<512> tmp;
       for(short k = 0; k < 32; k++) {
-	tmp(16*(k+1)-1, 16*k) = iivoutp[j*32+k];
+    tmp(16*(k+1)-1, 16*k) = iivoutp[j*32+k];
       }
       ivoutp.write(tmp);
     }
@@ -298,8 +295,8 @@ output memory.
 *************************************************************************** */
 void write_blocks(ap_int<512> *out, hls::stream<int512_t> &in, unsigned int blocks) {
   for(unsigned int i = 0; i < blocks*2; i++) {
-    #pragma HLS loop_tripcount min=2048 max=2048
-    #pragma HLS PIPELINE
+  #pragma HLS loop_tripcount min=2048 max=2048
+  #pragma HLS PIPELINE II=1
     out[i] = in.read();
   }
 }
@@ -315,15 +312,15 @@ dataflow blocks.
 
 *************************************************************************** */
 void krnl_idct_dataflow(const ap_int<512> *block, 
-			const ap_uint<512> *q, 
-			ap_int<512> *voutp, 
-			int ignore_dc, 
-			unsigned int blocks) {
-  // #pragma HLS DATAFLOW
+            const ap_uint<512> *q, 
+            ap_int<512> *voutp, 
+            int ignore_dc, 
+            unsigned int blocks) {
+  //#pragma HLS DATAFLOW
 
-  hls::stream<int512_t> iblock;
-  hls::stream<uint512_t> iq;
-  hls::stream<int512_t> ivoutp;
+  hls::stream<int512_t> iblock("input_stream1");
+  hls::stream<uint512_t> iq("input_stream2");
+  hls::stream<int512_t> ivoutp("output_stream");
   #pragma  HLS stream variable=iblock depth=512
   #pragma  HLS stream variable=iq     depth=2
   #pragma  HLS stream variable=ivoutp depth=512
@@ -346,11 +343,11 @@ Kernel idct interface definition.
 *************************************************************************** */
 extern "C" {
 void krnl_idct(const ap_int<512> *block, 
-	       const ap_uint<512> *q, 
-	       ap_int<512> *voutp, 
-	       int ignore_dc, 
-	       unsigned int blocks) {
-  #pragma HLS INTERFACE m_axi     port=block     offset=slave bundle=gmem
+           const ap_uint<512> *q, 
+           ap_int<512> *voutp, 
+           int ignore_dc, 
+           unsigned int blocks) {
+  #pragma HLS INTERFACE m_axi     port=block     offset=slave bundle=gmem0
   #pragma HLS INTERFACE s_axilite port=block                  bundle=control
   #pragma HLS INTERFACE m_axi     port=q         offset=slave bundle=gmem1
   #pragma HLS INTERFACE s_axilite port=q                      bundle=control

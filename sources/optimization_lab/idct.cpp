@@ -1,34 +1,32 @@
 /**********
-Copyright (c) 2017, Xilinx, Inc.
+Copyright (c) 2018, Xilinx, Inc.
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
-1. Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
 
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
 
-3. Neither the name of the copyright holder nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **********/
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #include "CL/opencl.h"
 #include <vector>
 #include <math.h>
@@ -132,65 +130,6 @@ static int load_file_to_memory(const char *filename, char **result) {
   return size;
 }
 
-/* *************************************************************************** 
-
-getBinaryName 
-
-The example makefile is designed to support many platforms and
-different modes of execution. This results in different naming of the
-final kernel executable code. 
-
-This function generates the name based on the environment setup and
-the provided platform name. The name is returned in the binaryName
-argument.
-
-*************************************************************************** */
-void getBinaryName(std::string &binaryName, char* device_name) {
-  char *xcl_mode = getenv("XCL_EMULATION_MODE");
-  bool isHwFlow = false;
-  bool isAwsFlow = !strcmp(device_name, "xilinx:aws-vu9p-f1:4ddr-xpr-2pr:4.0");
-  binaryName = "xclbin/krnl_idct";
-  
-  if(xcl_mode && !(strcmp(xcl_mode, "sw_emu"))) {
-    std::cout << "Running Software Emulation" << std::endl;
-    binaryName += ".sw_emu";
-  } else if(xcl_mode && !(strcmp(xcl_mode, "hw_emu"))) {
-    std::cout << "Running Hardware Emulation" << std::endl;
-    binaryName += ".hw_emu";
-  } else {
-    isHwFlow = true;
-    std::cout << "Running Hardware" << std::endl;
-    binaryName += ".hw";
-  }
-
-  std::string target = device_name;
-  std::replace(target.begin(), target.end(), ':', '_');
-  std::replace(target.begin(), target.end(), '.', '_');
-  if(!isAwsFlow) {
-    // remove platform version
-    int _count = 0;
-    int count = 0;
-    for (char & c : target) {
-      if(c == '_') {
-	_count++;
-      }
-      if(_count == 3) {
-	break;
-      }
-      count++;
-    }
-    target = target.substr(0,count);
-  }
-  binaryName += "." + target;
-
-  if((isHwFlow==true) && (isAwsFlow==true)) {
-    binaryName += ".awsxclbin";
-  } else {
-    binaryName += ".xclbin";
-  }
-}
-
-
 
 /* *************************************************************************** 
 
@@ -217,18 +156,18 @@ public:
   ~oclDct();
 
   void init(cl_context   context, 
-	    cl_device_id device, 
-	    cl_kernel    krnl, 
-	    cl_command_queue q,
-	    size_t blocks);
+        cl_device_id device, 
+        cl_kernel    krnl, 
+        cl_command_queue q,
+        size_t blocks);
 
   void write(
-	     size_t start,
-	     std::vector<int16_t,aligned_allocator<int16_t>> *blocks,
-	     std::vector<uint16_t,aligned_allocator<uint16_t>> *q,
-	     std::vector<int16_t,aligned_allocator<int16_t>> *out,
-	     bool ignore_dc
-	     );
+         size_t start,
+         std::vector<int16_t,aligned_allocator<int16_t>> *blocks,
+         std::vector<uint16_t,aligned_allocator<uint16_t>> *q,
+         std::vector<int16_t,aligned_allocator<int16_t>> *out,
+         bool ignore_dc
+         );
   void run();
   void read();
   void finish();
@@ -250,10 +189,6 @@ private:
   cl_mem            *mOutBuffer;
   int               m_dev_ignore_dc;   
   
-  cl_mem_ext_ptr_t  mBlockExt;
-  cl_mem_ext_ptr_t  mQExt;
-  cl_mem_ext_ptr_t  mOutExt;
-
   cl_event          inEvVec[NUM_SCHED];
   cl_event          runEvVec[NUM_SCHED];
   cl_event          outEvVec[NUM_SCHED];
@@ -291,10 +226,10 @@ be allocated externally and provided to the kernel interaction class.
 
 *************************************************************************** */
 void oclDct::init(cl_context   context, 
-		  cl_device_id device, 
-		  cl_kernel    krnl, 
-		  cl_command_queue q,
-		  size_t numBlocks64) 
+          cl_device_id device, 
+          cl_kernel    krnl, 
+          cl_command_queue q,
+          size_t numBlocks64) 
 {
   mContext = context;
   mDevice  = device;
@@ -304,20 +239,6 @@ void oclDct::init(cl_context   context,
   mNumBlocks64 = numBlocks64;
   
   assert(mNumBlocks64 == numBlocks64); // check that there was not a truncation
-  
-  mBlockExt.flags = XCL_MEM_DDR_BANK0;
-  mQExt.flags = XCL_MEM_DDR_BANK0;
-  mOutExt.flags = XCL_MEM_DDR_BANK1;
-  
-  mBlockExt.obj = nullptr;
-  mBlockExt.param = 0;
-  
-  mQExt.obj = nullptr; 
-  mQExt.param = 0;
-  
-  mOutExt.obj = nullptr; 
-  mOutExt.param = 0;
-  
   mInit = true;
   mCount = 0;
   mHasRun = false;
@@ -337,12 +258,12 @@ transaction is managed in this function.
 
 *************************************************************************** */
 void oclDct::write(
-		   size_t start,
-		   std::vector<int16_t,aligned_allocator<int16_t>> *blocks,
-		   std::vector<uint16_t,aligned_allocator<uint16_t>> *q,
-		   std::vector<int16_t,aligned_allocator<int16_t>> *out,
-		   bool ignore_dc
-		   ) {
+           size_t start,
+           std::vector<int16_t,aligned_allocator<int16_t>> *blocks,
+           std::vector<uint16_t,aligned_allocator<uint16_t>> *q,
+           std::vector<int16_t,aligned_allocator<int16_t>> *out,
+           bool ignore_dc
+           ) {
 
   if(mCount == NUM_SCHED) {
     mHasRun = true;
@@ -367,33 +288,27 @@ void oclDct::write(
 
   cl_int err;
   // Move Buffer over input vector
-  mBlockExt.obj = blocks->data() + mNumBlocks64*64*start; 
-  mQExt.obj     = q->data();
   mInBuffer[0] = clCreateBuffer(mContext, 
-				CL_MEM_EXT_PTR_XILINX | CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,
-				mNumBlocks64*64*sizeof(int16_t), 
-				&mBlockExt,
-				&err);
+                CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,
+                mNumBlocks64*64*sizeof(int16_t), 
+                blocks->data() + mNumBlocks64*64*start,
+                &err);
 
   mInBuffer[1] = clCreateBuffer(mContext, 
-				CL_MEM_EXT_PTR_XILINX | CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,
-				64*sizeof(uint16_t), 
-				&mQExt,
-				&err);
+                CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,
+                64*sizeof(uint16_t), 
+                q->data(),
+                &err);
   
   // Move Buffer over output vector
-  mOutExt.obj = out->data() + mNumBlocks64*64*start; 
   mOutBuffer[0] =clCreateBuffer(mContext, 
-				CL_MEM_EXT_PTR_XILINX | CL_MEM_USE_HOST_PTR | CL_MEM_WRITE_ONLY,
-				mNumBlocks64*64*sizeof(int16_t), 
-				&mOutExt,
-				&err);
+                CL_MEM_USE_HOST_PTR | CL_MEM_WRITE_ONLY,
+                mNumBlocks64*64*sizeof(int16_t), 
+                out->data() + mNumBlocks64*64*start,
+                &err);
   
   // Prepare Kernel to run
   m_dev_ignore_dc = ignore_dc ? 1 : 0;
-
-  // Schedule actual writing of data
-  clEnqueueMigrateMemObjects(mQ, 2, mInBuffer, 0, 0, nullptr, &inEvVec[mCount]);
   
 }
 
@@ -413,6 +328,9 @@ void oclDct::run() {
   clSetKernelArg(mKernel, 2, sizeof(cl_mem), &mOutBuffer[0]);
   clSetKernelArg(mKernel, 3, sizeof(int), &m_dev_ignore_dc);
   clSetKernelArg(mKernel, 4, sizeof(unsigned int), &mNumBlocks64);
+
+  // Schedule actual writing of data
+  clEnqueueMigrateMemObjects(mQ, 2, mInBuffer, 0, 0, nullptr, &inEvVec[mCount]);
 
   clEnqueueTask(mQ, mKernel, 1, &inEvVec[mCount], &runEvVec[mCount]);
 }
@@ -465,14 +383,14 @@ This function guides the kernel execution of the idct algorithm.
 
 *************************************************************************** */
 void runFPGA(
-	size_t blocks,
-	std::vector<int16_t,aligned_allocator<int16_t>> &source_block,
-	std::vector<uint16_t,aligned_allocator<uint16_t>> &source_q,
-	std::vector<int16_t,aligned_allocator<int16_t>> &result_vpout,
-	cl_command_queue q,
-	bool ignore_dc,
-	oclDct &cu,
-	unsigned int numBlocks64
+    size_t blocks,
+    std::vector<int16_t,aligned_allocator<int16_t>> &source_block,
+    std::vector<uint16_t,aligned_allocator<uint16_t>> &source_q,
+    std::vector<int16_t,aligned_allocator<int16_t>> &result_vpout,
+    cl_command_queue q,
+    bool ignore_dc,
+    oclDct &cu,
+    unsigned int numBlocks64
 ) {
   for(size_t j = 0; j < blocks/numBlocks64; j++) {
     cu.write(j, &source_block, &source_q, &result_vpout, ignore_dc);
@@ -494,12 +412,12 @@ algorithm.
 
 *************************************************************************** */
 void runCPU(
-	    size_t blocks,
-	    std::vector<int16_t,aligned_allocator<int16_t>> &source_block,
-	    std::vector<uint16_t,aligned_allocator<uint16_t>> &source_q,
-	    std::vector<int16_t,aligned_allocator<int16_t>> &golden_vpout,
-	    bool ignore_dc
-	    ) {
+        size_t blocks,
+        std::vector<int16_t,aligned_allocator<int16_t>> &source_block,
+        std::vector<uint16_t,aligned_allocator<uint16_t>> &source_q,
+        std::vector<int16_t,aligned_allocator<int16_t>> &golden_vpout,
+        bool ignore_dc
+        ) {
   for(size_t i = 0; i < blocks; i++){
     idctSoft(&source_block[i*64], &source_q[0], &golden_vpout[i*64], ignore_dc);
   }
@@ -521,14 +439,12 @@ int main(int argc, char* argv[]) {
 
   char *xcl_mode = getenv("XCL_EMULATION_MODE");
 
-  int xclbin_argc = -1;
-  for(int i=0; i<argc; i++) {
-    std::string arg = argv[i];
-    std::string xclbinStr = "xclbin";
-    if(arg.find(xclbinStr) != std::string::npos) {
-      xclbin_argc = i;
-    }
+  if (argc != 2) {
+    printf("Usage: %s <XCLBIN File>\n", argv[0]);
+    return EXIT_FAILURE;
   }
+
+  char* binaryName = argv[1];
 
 
   // *********** Allocate and initialize test vectors **********
@@ -554,7 +470,7 @@ int main(int argc, char* argv[]) {
       source_block[i*64 + j] = j;
     }
   }
-	
+    
   for(size_t j = 0; j < 64; j++) {
     source_q[j] = j;
   }
@@ -564,7 +480,7 @@ int main(int argc, char* argv[]) {
   int banks = 1;
   const size_t cus = banks;
   const size_t threads = cus;
-  size_t numBlocks64 = 512; // 2^16
+  size_t numBlocks64 = 512; 
 
   if (xcl_mode != NULL) {
     numBlocks64 = 256;
@@ -573,7 +489,7 @@ int main(int argc, char* argv[]) {
   std::cout << "FPGA number of 64*int16_t blocks per transfer: " << numBlocks64 << std::endl;
   if(blocks%(threads*numBlocks64) != 0) {
     std::cout << "Error: The current implementation supports only full banks to be transfered"
-	      << " per thread" << std::endl;
+          << " per thread" << std::endl;
     exit(1);
   }
 
@@ -628,24 +544,17 @@ int main(int argc, char* argv[]) {
 
   std::cout << "DEVICE: " << cl_device_name << std::endl;
 
-  std::string binaryName;
-  if(xclbin_argc != -1) {
-    binaryName = argv[xclbin_argc];
-  } else {
-    getBinaryName(binaryName, cl_device_name);
-  }
-
   std::cout << "Loading Bitstream: " << binaryName << std::endl; 
   char *krnl_bin;
   size_t krnl_size;
-  krnl_size = load_file_to_memory(binaryName.c_str(), &krnl_bin);
+  krnl_size = load_file_to_memory(binaryName, &krnl_bin);
 
   printf("INFO: Loaded file\n");
 
   cl_program program = clCreateProgramWithBinary(context, 1,
-						 (const cl_device_id* ) &device_id, &krnl_size,
-						 (const unsigned char**) &krnl_bin,
-						 NULL, &err);
+                         (const cl_device_id* ) &device_id, &krnl_size,
+                         (const unsigned char**) &krnl_bin,
+                         NULL, &err);
 
 
   // Create Kernel
@@ -654,7 +563,7 @@ int main(int argc, char* argv[]) {
 
   // Create Command Queue
   cl_command_queue q = clCreateCommandQueue(context, device_id, 
-					    CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &err);
+                        CL_QUEUE_PROFILING_ENABLE | CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE, &err);
 
   // Create compute units
   std::cout << "Create Compute Unit" << std::endl;
@@ -675,13 +584,13 @@ int main(int argc, char* argv[]) {
   std::cout << "Running FPGA version" << std::endl;
   auto fpga_begin = std::chrono::high_resolution_clock::now();
   runFPGA(blocks, 
-	  source_block, 
-	  source_q, 
-	  result_vpout, 
-	  q,
-	  ignore_dc, 
- 	  cu, 
-	  numBlocks64);
+      source_block, 
+      source_q, 
+      result_vpout, 
+      q,
+      ignore_dc, 
+       cu, 
+      numBlocks64);
   auto fpga_end = std::chrono::high_resolution_clock::now();
 
 
@@ -702,7 +611,7 @@ int main(int argc, char* argv[]) {
     if(result_vpout[i] != golden_vpout[i]){
       printf("Error: Result mismatch\n");
       printf("i = %d CPU result = %d Krnl Result = %d\n", 
-	     (int) i, golden_vpout[i], result_vpout[i]);
+         (int) i, golden_vpout[i], result_vpout[i]);
       krnl_match = 1;
       break;
     } 
@@ -721,15 +630,15 @@ int main(int argc, char* argv[]) {
 
     std::cout << "CPU Time:        " << cpu_duration.count() << " s" << std::endl;
     std::cout << "CPU Throughput:  " 
-	      << (double) blocks*128 / cpu_duration.count() / (1024.0*1024.0)
-	      << " MB/s" << std::endl;
+          << (double) blocks*128 / cpu_duration.count() / (1024.0*1024.0)
+          << " MB/s" << std::endl;
     std::cout << "FPGA Time:       " << fpga_duration.count() << " s" << std::endl;
     std::cout << "FPGA Throughput: " 
-	      << (double) blocks*128 / fpga_duration.count() / (1024.0*1024.0)
-	      << " MB/s" << std::endl;
+          << (double) blocks*128 / fpga_duration.count() / (1024.0*1024.0)
+          << " MB/s" << std::endl;
     std::cout << "FPGA PCIe Throughput: " 
-	      << (2*(double) blocks*128 + 128) / fpga_duration.count() / (1024.0*1024.0)
-	      << " MB/s" << std::endl;
+          << (2*(double) blocks*128 + 128) / fpga_duration.count() / (1024.0*1024.0)
+          << " MB/s" << std::endl;
   } else {
     std::cout << "RUN COMPLETE" << std::endl;
   }
@@ -748,9 +657,9 @@ golden reference data.
 
 *************************************************************************** */
 void idctSoft(const int16_t block[64], 
-	      const uint16_t q[64], 
-	      int16_t outp[64], 
-	      bool ignore_dc) {
+          const uint16_t q[64], 
+          int16_t outp[64], 
+          bool ignore_dc) {
   int32_t intermed[64];
 
   const uint16_t w1 = 2841; // 2048*sqrt(2)*cos(1*pi/16)
@@ -773,7 +682,7 @@ void idctSoft(const int16_t block[64],
   for (int y = 0; y < 8; ++y) {
     int y8 = y * 8;
     int32_t x0 = (((ignore_dc && y == 0)
-		   ? 0 : (block[y8 + 0] * q[y8 + 0]) << 11)) + 128;
+           ? 0 : (block[y8 + 0] * q[y8 + 0]) << 11)) + 128;
     int32_t x1 = (block[y8 + 4] * q[y8 + 4]) << 11;
     int32_t x2 = block[y8 + 6] * q[y8 + 6];
     int32_t x3 = block[y8 + 2] * q[y8 + 2];
