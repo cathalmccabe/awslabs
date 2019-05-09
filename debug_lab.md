@@ -151,7 +151,7 @@ For AWS run the following script which will manage setup of the XVC:
 
 * Right click on the *debug_bridge* and select **Refresh Device**.
 
-The Vivado Hardware Manager should open showing _Hardware_, _Waveform_, _Settings-hw_, _Trigger-Setup_ windows. The _Hardware_ window also shows two ILA cores, *hw_ila_0* and *hw_ila_1*, inserted in the design.
+The Vivado Hardware Manager should open showing _Hardware_, _Waveform_, _Settings-hw_, _Trigger-Setup_ windows. The _Hardware_ window also shows the detected ILA cores (*hw_ila_\**), inserted in the design. The Alveo design will have one ILA. The AWS design will have two ILAs, one monitoring the AWS shell interface. 
 
 ![](./images/debug_lab/FigDebugLab-7.png)
 
@@ -219,8 +219,9 @@ The bitstream will be downloaded to the FPGA and the host application will start
 
 * Click on the **Step Over** button or press **F6**
   
+
 The execution will progress one statement at a time
-  
+
 * Continue pressing **F6** until you reach line ~326 at which point kernel will finish executing
 
 * Select the **Memory Buffers** tab 

@@ -98,7 +98,7 @@ To setup the OpenCL environment, the following API calls are made:
    - **clGetDeviceIDs** : Obtain a list of devices available on a platform
    - **clCreateContext** : Creates an OpenCL context, which manages the runtime objects
    - **clGetDeviceInfo** : Get information about an OpenCL device like the device name
-   - **clCreateProgramWithBinary** : Creates a program object for a context, and loads specified binary data into the program object. The actual program is obtained before this call through the `load\_file\_to_memory()` function
+   - **clCreateProgramWithBinary** : Creates a program object for a context, and loads specified binary data into the program object. The actual program is obtained before this call through the `load_file_to_memory()` function
    - **clCreateKernel** : Creates a kernel object
    - **clCreateCommandQueue** : Create a command-queue on a specific device
 
@@ -117,8 +117,9 @@ In the *idct.cpp* file, locate lines 286-297. Note that two memory buffers, *mIn
 
 * From the dropdown block under *Memory* select the following:
 
-   * mInBuffer: DDR[0] 
-   * mOutBuffer: DDR[1]
+   * block: DDR[0] 
+   * q: DDR[0]
+   * voutp: DDR[1]
 
 ![](./images/optimization_lab/compute_unit_settings.png)
 
