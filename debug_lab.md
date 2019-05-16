@@ -5,10 +5,10 @@
   <tr>
     <td align="center"><a href="setup_sdx.md">1. Setup SDx</a></td>
     <td align="center"><a href="sdx_introduction.md">2. Introduction to SDx</a></td>
-    <td align="center"><a href="Optimization_lab.md">4. Optimization</a></td>
-    <td align="center"><a href="rtl_kernel_wizard_lab.md">5. RTL Kernel Wizard</a></td>
-    <td align="center"><a href="debug_lab.md">6. Debugging</a></td>
-    <td align="center"><a href="sources/helloworld_ocl/command_line.ipynb">7. SDx command line</a></td>
+    <td align="center"><a href="Optimization_lab.md">3. Optimization</a></td>
+    <td align="center"><a href="rtl_kernel_wizard_lab.md">4. RTL Kernel Wizard</a></td>
+    <td align="center"><a href="debug_lab.md">5. Debugging</a></td>
+    <td align="center"><a href="sources/helloworld_ocl/command_line.ipynb">6. SDx command line</a></td>
   </tr>
 </table>
 
