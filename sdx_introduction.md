@@ -38,7 +38,7 @@ After completing this lab, you will be able to:
 ## Steps
 ### Create an SDx Project
 
-* Launch SDx by executing **sdx** in a terminal window, or click on the **SDX** desktop icon if available
+* Launch SDx by executing **sdx** in a terminal window, or click on the **SDX** desktop icon if available.
 You will be prompted to select a workspace directory
 
 * Click Launch to accept the default (usually ~/workspace)

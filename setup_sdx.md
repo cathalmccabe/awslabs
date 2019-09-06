@@ -59,7 +59,7 @@ The tutorial assumes you will clone this repository to your Linux home area. If 
    git clone https://github.com/xupgit/sdxlabs
 ```
 
-Proceed to the first lab [introducing SDx](GUI_Flow_lab.md) 
+Proceed to the first lab [introducing SDx](sdx_introduction.md) 
 
 
 

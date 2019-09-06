@@ -108,76 +108,81 @@ If you select the wrong region you may not see your instance.
     <p align = "center">
     <i>Assigned IP to the running instance</i>
     </p>  
-### Interacting with the Instance using RDP
+### Interacting with the Instance using DVC
 
-**You can communicate with the instance using command line through PuTTY or Git Bash, and using GUI through remote desktop (RDP) connection.**
+There is a bug in CentOS 7 elated to RDP. DVC as recommended by Amazon will be used to remote desktop to the instance. 
 
-* Start a remote desktop session
-* Enter the _IPv4_ address
-* Click on the **Show Options**
-    <p align="center">
-    <img src ="./images/connecting_lab/FigConnectingLab-10.png"/>
-    </p>
-    <p align = "center">
-    <i>Entering the IPv4 address</i>
-    </p>  
-* Select the **Display** tab and select _True Color (24 bit)_ and click **Connect**
-    <p align="center">
-    <img src ="./images/connecting_lab/FigConnectingLab-11.png"/>
-    </p>
-    <p align = "center">
-    <i>Selecting resolution and connecting</i>
-    </p>  
-* A certificate warning will be displayed. Click **Yes** to open the RDP session
-* Enter centos as the username and enter the provided password and click **OK**
-    <p align="center">
-    <img src ="./images/connecting_lab/FigConnectingLab-12.png"/>
-    </p>
-    <p align = "center">
-    <i>Entering username and password</i>
-    </p>  
-* Right-click on the desktop and select **Open Terminal** to open a window
-* You should enter the following commands in any newly opened terminal window to source the environments
-   ```
-      cd ~/aws-fpga	  
-      source sdaccel_setup.sh	  
-      source $XILINX_SDX/settings64.sh
-   ```
+* Download and install the appropriate NICE DCV client here: https://download.nice-dcv.com
 
-### Stopping the Instance and Signing Out
+Open PuTTY, enter the IPv4 Public IP address from the Amazon console, and click open
 
-**It is important to shut down the instance in order to stop billing meter.  You do not need to execute this command in this lab as you will continue the session for the subsequent labs**
+![](./images/putty_ip4.png)
 
-* Type the following command to terminate the RDP session and shutdown the instance
-   ```
-      sudo shutdown now	  
-   ```
-* Check the browser window, you will see status as either **Stopping** or **Stopped.** Click on the refresh button to see the status update  
-    <p align="center">
-    <img src ="./images/connecting_lab/FigConnectingLab-13-1.png"/>
-    <img src ="./images/connecting_lab/FigConnectingLab-13-2.png"/>
-    </p>
-    <p align = "center">
-    <i>Instance Status</i>
-    </p>  
+This should open a terminal to the AWS instance. 
 
-* Once the instance is stopped, sign out by clicking on the drop-down button on the top bar and selecting **Sign Out**
-    <p align="center">
-    <img src ="./images/connecting_lab/FigConnectingLab-14.png"/>
-    </p>
-    <p align = "center">
-    <i>Signing out</i>
-    </p>  
+* In the terminal,enter the following command to start the DCV server:
 
-## Conclusion
+```
+dcv create-session --type virtual --user centos centos
+```
 
-In this lab, you learned how to connect to an AWS EC2 F1 instance, interact with the instance using RDP connection, how to stop the instance, and sign out.
+![](./images/putty_dcv.png)
+
+
+
+## NICE DCV
+
+Open the NICE DCV application, enter the I*Pv4 Public IP* from the Amazon console and click **Open**
+
+
+
+![](./images/nice_dcv.png)
+
+* When prompted, enter the username and password provided by your instructor to connect to the instance.
+
+![](./images/nice_dcv_desktop.png)
+
+
+
+# Verify XRT and SDx tools
+
+- Right-click on the desktop and select **Open Terminal** and verify the Xilinx SDx tools have been preinstalled and are on the path by executing the following command:
+
+```
+   which sdx
+```
+
+The XRT (Xilinx Run Time) tools are installed (/opt/xilinx/xrt) but are not included on the path by default. 
+
+* Execute the following to change the permissions of the XRT setup file, and to automatically source the XRT tools. Make sure to only execute this once. 
+
+
+```
+   sudo chmod 774 /opt/xilinx/xrt/setup.sh
+   echo "source /opt/xilinx/xrt/setup.sh" >> ~/.bashrc
+```
+
+For your reference, in the commands below, $AWS_FPGA_REPO_DIR has already been defined in the environment from: /etc/profile.d/aws-f1.sh 
+
+* Exectue the following to clone the *aws-fpga* repository and setup the Xilinx tools. aws-fpga includes the AWS F1 tools, HDK and documentation:
+
+```
+   cd ~/src/project_data
+   git clone https://github.com/aws/aws-fpga
+   cd $AWS_FPGA_REPO_DIR                                         
+   source sdaccel_setup.sh
+   echo "export PLATFORM_REPO_PATHS=/home/centos/src/project_data/aws-fpga/SDAccel/aws_platform/xilinx_aws-vu9p-f1-04261818_dynamic_5_0" >> ~/.bashrc
+    
+```
+
+For more details see:
+
+https://github.com/aws/aws-fpga/blob/master/SDAccel/README.md
 
 ---------------------------------------
 
-<p align="center"><b>
-Start the next lab: <a href="Makefile_Flow_lab.md">2. Makefile Flow</a>
-</b></p>
+Return to [Setup SDx](./setup_sdx.md) and go to the **Getting started with the tutorials** section to finish setting up by cloning the tutorial labs. 
+
 ---------------------------------------
 
 ## Appendix: Interacting with the Instance using Putty
@@ -225,3 +230,27 @@ The PuTTY window will open. It will ask for the password (in case of the worksho
     You will use the same password in the RDP connection.
 
 * Enter **exit** to close the session
+
+
+
+### Connect using RDP (deprecated for 2018.3)
+
+**You can communicate with the instance using command line through PuTTY or Git Bash, and using GUI through remote desktop (RDP) connection.**
+
+- Start a remote desktop session
+
+- Enter the _IPv4_ address
+
+- Click on the **Show Options**
+
+  ![](G:/cathalmccabe/awslabs/images/connecting_lab/FigConnectingLab-10.png)
+
+- Select the **Display** tab and select _True Color (24 bit)_ and click **Connect**
+
+  ![](G:/cathalmccabe/awslabs/images/connecting_lab/FigConnectingLab-11.png)
+
+- A certificate warning will be displayed. Click **Yes** to open the RDP session
+
+- Enter centos as the username and enter the provided password and click **OK**
+
+  ![](G:/cathalmccabe/awslabs/images/connecting_lab/FigConnectingLab-12.png)
