@@ -83,7 +83,7 @@ There are six main windows in this perspective: Project Explorer, Main panel (SD
 
 * **krnl_vadd.cl** is the OpenCL source for a simple vector addition kernel
 * **vadd.cpp/.h** are the host application source and header
-* **xcl.cpp/.h** are the header and source for some helpful OpenCL function wrappers
+* **xcl.cpp/.h** are the source and header for some helpful OpenCL function wrappers
 
 ### Perform Software Emulation
 
@@ -117,7 +117,7 @@ As mentioned in the introduction, the two arrays that will be added together can
 
 * Click on the **Arguments** tab and select **Automatically add binary container(s)  arguments** 
 
-**../binary_container_1.xclbin** should be automatically added to the text area. Add the initilization value for the arrays by typing a number into the box. In this case, type **0** after *../binary_container_1.xclbin* (with a space inbetween the two arguments).
+**../binary_container_1.xclbin** should be automatically added to the text area. Add the initilization value for the arrays by typing a number into the box. In this case, type **0** after *../binary_container_1.xclbin* (with a space in between the two arguments).
 
 ![](./images/helloworld/FigGUIflowLab-9.png)
 
@@ -218,6 +218,8 @@ Observe the average size of the data transferred, and the estimated transfer rat
 
 ![](./images/helloworld/sys_estimate.png)
 
+* Close SDx
+
 ### System Build
 
 At this stage, you could build the project, but as it take some time to compile you can skip this step for now. See the Appendix below for instructions on how to build the hardware. 
@@ -226,12 +228,22 @@ At this stage, you could build the project, but as it take some time to compile 
 
 As building the FPGA hardware takes some time, a precompiled solution is provided. The results should not be any different to the HW and SW emulation, so this step is optional. 
 
-* From the SDx file menu, select **import**
+For AWS, execute the following in a new terminal, as this needs to be run as sudo
+
+```
+sudo sh
+source /opt/Xilinx/SDx/2018.3.op2405991/settings64.sh
+source /opt/xilinx/xrt/setup.sh
+export PLATFORM_REPO_PATHS=/home/centos/src/project_data/aws-fpga/SDAccel/aws_platform/xilinx_aws-vu9p-f1-04261818_dynamic_5_0
+```
+
+* Start SDx (execute ```sdx``` from the terminal) and from the SDx file menu, select **import**
+* Again from the SDx file menu, select **import**
 * Expand *Xilinx* and select **SDx Project** and click **Next**
 * Choose *SDx project exported zip file* and click **Next**
-* Browse to **~/sdxlabs/solutions/hello_world/u200/hello_world_sol.zip** and click **OK**
+* Browse to **~/sdxlabs/solutions/hello_world/[aws|u200]/hello_world_sol.zip** and click **OK**
 
-You should see a new *hello_world_sol_* folder in the Project Explorer
+You should see a new *hello_world_* folder in the Project Explorer
 
 #### Set the executable file permissions
 
@@ -243,8 +255,6 @@ Zip files do not preserve Unix file permissions, so the executable permissions m
 
 ![](./images/helloworld/file_permissions.png)
 
-* 
-
 #### Disable Auto building
 
 * Right click on the project folder, select C/C++ Build Settings
@@ -255,8 +265,9 @@ Zip files do not preserve Unix file permissions, so the executable permissions m
 
 * Open the project.sdx and select **System** as the *Active build configuration*
 * In the SDx *Run* menu, select **Run Configurations**
-* Expand OpenCL if necessary, and select the **hello_world_sol-Default** configuration
-* Check the *binary container* has been included in the *Arguments* tab and click **Run**
+* Expand OpenCL if necessary, and select the **hello_world-Default** configuration
+* Check that the *binary container* has been included in the *Arguments* tab and click **Run**
+  * Note for AWS, don't click the box to automatically include the binary container. This will change the argument to ../binary_container_1.xclbin instead of ../binary_container_1.**aws**xclbin binary required for AWS. 
 
 You should see the application output in the console. The output should be similar to what you saw for the SW and HW Emulation runs. 
 

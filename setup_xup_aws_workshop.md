@@ -130,6 +130,15 @@ dcv create-session --type virtual --user centos centos
 
 
 
+* Stop the firewall
+
+```
+sudo systemctl disable firewalld
+sudo systemctl stop firewalld
+```
+
+
+
 ## NICE DCV
 
 Open the NICE DCV application, enter the I*Pv4 Public IP* from the Amazon console and click **Open**

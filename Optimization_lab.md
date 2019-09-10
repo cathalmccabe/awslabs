@@ -421,21 +421,28 @@ Note: system tasks might slow down communication between the application and the
 
 As before, building the FPGA hardware takes some time, and a precompiled solution is provided. 
 
-- From the SDx file menu, select **import**
+For AWS, execute the following in a new terminal, as this needs to be run as sudo
+
+```
+sudo sh
+source /opt/Xilinx/SDx/2018.3.op2405991/settings64.sh
+source /opt/xilinx/xrt/setup.sh
+export PLATFORM_REPO_PATHS=/home/centos/src/project_data/aws-fpga/SDAccel/aws_platform/xilinx_aws-vu9p-f1-04261818_dynamic_5_0
+```
+
+- Start SDx (execute ```sdx``` from the terminal) and from the SDx file menu, select **import**
 - Expand *Xilinx* and select **SDx Project** and click **Next**
 - Choose *SDx project exported zip* file and click **Next**
 
-#### For Alveo U200:
+- Browse to **~/sdxlabs/solutions/optimization_lab/[aws|u200]/** and select the corresponding ***.sdx.zip** for your OS, and click **OK**
 
-- Browse to **~/sdxlabs/solutions/optimization_lab/u200/** and select the corresponding **sdx.zip** for your OS, and click **OK**
-
-You should see a new *optimiaztion_lab_sol* folder in the Project Explorer
+You should see a new *optimiaztion_lab* folder in the Project Explorer
 
 #### Set the executable file permissions
 
 Zip files do not preserve Unix file permissions, so the executable permissions must be modified manually.
 
-- Expand *optimiaztion_lab_sol > System* and right click on **optimiaztion_lab_sol.exe**
+- Expand *optimiaztion_lab > System* and right click on **optimiaztion_lab.exe**
 
 - Select **Execute** for the *Owner* permissions and click **Apply and Close**
 
@@ -455,30 +462,17 @@ Zip files do not preserve Unix file permissions, so the executable permissions m
 
 - Expand OpenCL if necessary, and select the **optimiaztion_lab-Default** configuration
 
-- Check the *binary container* has been included in the *Arguments* tab and click **Run**
+- Check the *binary container* has been included in the *Arguments* tab 
 
   For Alveo, this will be the binary_container_1.**xclbin** file, and for AWS this will be the binary_container_1.**awsxclbin** file. 
 
-The FPGA bitstream will be downloaded and the host application will be executed. The output should be similar to the following:
+* On the profiling tab, disable profiling as data transfer in this example will slow down the application (you can rerun with profiling enabled later if you wish)
 
-```console
-   FPGA number of 64*int16_t blocks per transfer: 512
-   DEVICE: xilinx_u200_xdma_201830_1
-   Loading Bitstream: ../binary_container_1.xclbin
-   INFO: Loaded file
-   Create Kernel: krnl_idct
-   Create Compute Unit
-   Setup complete
-   Running CPU version
-   Running FPGA version
-   Runs complete validating results
-   TEST PASSED
-   CPU Time:        0.738601 s
-   CPU Throughput:  693.202 MB/s
-   FPGA Time:       1.23706 s
-   FPGA Throughput: 413.883 MB/s
-   FPGA PCIe Throughput: 827.767 MB/s
-```
+* Click **Run**
+
+  
+
+The FPGA bitstream will be downloaded and the host application will be executed. 
 
 
 ## Conclusion

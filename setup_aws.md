@@ -78,7 +78,7 @@ When prompted, enter the VNC server password set up earlier.
 
 You should then be connected to the AWS instance.
 
-### Verify XRT and SDx tools and
+### Verify XRT and SDx tools
 
 Open a terminal and verify the Xilinx SDx tools have been preinstalled and are on the path:
 
@@ -89,7 +89,7 @@ Open a terminal and verify the Xilinx SDx tools have been preinstalled and are o
 Note that the XRT tools are installed (/opt/xilinx/xrt) but are not included on the path by default. 
 
 ```
-   sudo chmod 777 /opt/xilixn/xrt/setup.sh
+   sudo chmod 777 /opt/xilinx/xrt/setup.sh
 ```
 
 Execute the following to add `source /opt/xilinx/xrt/setup.sh` to ~/.bashrc (or manually edit ~/.bashrc and add the line).
